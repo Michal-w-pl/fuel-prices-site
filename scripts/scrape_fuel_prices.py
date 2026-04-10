@@ -87,3 +87,112 @@ def parse_latest_prices_from_text(html: str) -> FuelPrices:
         lpg=values["lpg"],
         electricity=read_existing_electricity_price(),
     )
+
+
+def find_candidate_table(soup: BeautifulSoup) -> Optional[BeautifulSoup]:
+    tables = soup.find_all("table")
+    for table in tables:
+        text = table.get_text(" ", strip=True).lower()
+        if all(token in text for token in ["pb95", "pb98", "on", "lpg"]):
+            return table
+    return None
+
+
+def parse_latest_prices_from_table(html: str) -> FuelPrices:
+    soup = BeautifulSoup(html, "html.parser")
+    table = find_candidate_table(soup)
+    if table is None:
+        raise ScrapeError("Could not find a table with PB95/PB98/ON/LPG columns")
+
+    rows = table.find_all("tr")
+    if len(rows) < 2:
+        raise ScrapeError("Fuel prices table does not contain enough rows")
+
+    best_row_text = None
+    for row in rows[1:]:
+        cells = [cell.get_text(" ", strip=True) for cell in row.find_all(["td", "th"])]
+        if len(cells) >= 5:
+            best_row_text = cells
+            break
+
+    if best_row_text is None:
+        raise ScrapeError("Could not find latest data row in fuel prices table")
+
+    numeric_cells = [c for c in best_row_text if re.search(r"[0-9]+,[0-9]+", c)]
+    if len(numeric_cells) < 4:
+        raise ScrapeError("Table row does not contain four numeric price cells")
+
+    pb98 = parse_decimal(numeric_cells[0])
+    pb95 = parse_decimal(numeric_cells[1])
+    on = parse_decimal(numeric_cells[2])
+    lpg = parse_decimal(numeric_cells[3])
+
+    return FuelPrices(
+        pb95=pb95,
+        pb98=pb98,
+        on=on,
+        lpg=lpg,
+        electricity=read_existing_electricity_price(),
+    )
+
+
+def read_existing_electricity_price(default: float = 1.04) -> float:
+    if not OUTPUT_PATH.exists():
+        return default
+    try:
+        data = json.loads(OUTPUT_PATH.read_text(encoding="utf-8"))
+        return float(data.get("prices", {}).get("electricity", default))
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return default
+
+
+def scrape_prices(html: str) -> FuelPrices:
+    try:
+        return parse_latest_prices_from_table(html)
+    except Exception:
+        return parse_latest_prices_from_text(html)
+
+
+def build_payload(prices: FuelPrices) -> dict:
+    now = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+    return {
+        "updated_at": now,
+        "source": {
+            "name": "e-petrol",
+            "url": SOURCE_URL,
+        },
+        "prices": {
+            "pb95": prices.pb95,
+            "pb98": prices.pb98,
+            "on": prices.on,
+            "lpg": prices.lpg,
+            "electricity": prices.electricity,
+        },
+        "meta": {
+            "country": "Polska",
+            "currency": "PLN",
+            "unit_liquid": "zł/l",
+            "unit_energy": "zł/kWh",
+            "note": "Electricity is maintained manually in the JSON file unless you add a separate source.",
+        },
+    }
+
+
+def save_payload(payload: dict) -> None:
+    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT_PATH.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def main() -> None:
+    html = fetch_html(SOURCE_URL)
+    prices = scrape_prices(html)
+    payload = build_payload(prices)
+    save_payload(payload)
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    main()
