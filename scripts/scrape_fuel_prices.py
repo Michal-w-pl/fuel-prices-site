@@ -54,8 +54,36 @@ def parse_decimal(value: str) -> float:
 
 def parse_latest_prices_from_text(html: str) -> FuelPrices:
     """
-    Fallback parser based on the visible text shown in search-accessible page content.
+    Fallback parser based on visible page text.
+
     Expected pattern resembles:
       Aktualizacja 2026-04-08
       Pb98 6,79
-    main()
+      Pb95 6,19
+      ON 7,79
+      LPG 3,84
+    """
+    text = BeautifulSoup(html, "html.parser").get_text(" ", strip=True)
+    compact = re.sub(r"\s+", " ", text)
+
+    patterns = {
+        "pb98": r"Pb\s*98\s*([0-9]+,[0-9]+)",
+        "pb95": r"Pb\s*95\s*([0-9]+,[0-9]+)",
+        "on": r"\bON\b\s*([0-9]+,[0-9]+)",
+        "lpg": r"\bLPG\b\s*([0-9]+,[0-9]+)",
+    }
+
+    values: dict[str, float] = {}
+    for key, pattern in patterns.items():
+        match = re.search(pattern, compact, flags=re.IGNORECASE)
+        if not match:
+            raise ScrapeError(f"Could not find value for {key} in page text")
+        values[key] = parse_decimal(match.group(1))
+
+    return FuelPrices(
+        pb95=values["pb95"],
+        pb98=values["pb98"],
+        on=values["on"],
+        lpg=values["lpg"],
+        electricity=read_existing_electricity_price(),
+    )
