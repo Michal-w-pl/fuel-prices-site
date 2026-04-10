@@ -1,0 +1,21 @@
+{
+  "updated_at": "2026-04-09T00:00:00+02:00",
+  "source": {
+    "name": "Seed data",
+    "url": "https://www.e-petrol.pl/notowania/rynek-krajowy/ceny-stacje-paliw"
+  },
+  "prices": {
+    "pb95": 6.19,
+    "pb98": 6.79,
+    "on": 7.79,
+    "lpg": 3.84,
+    "electricity": 1.04
+  },
+  "meta": {
+    "country": "Polska",
+    "currency": "PLN",
+    "unit_liquid": "zł/l",
+    "unit_energy": "zł/kWh",
+    "note": "Electricity is maintained manually in the JSON file unless you add a separate source."
+  }
+}
