@@ -376,41 +376,69 @@
   <body>
     <div class="container">
       <div class="grid top-grid">
-        <section class="card">
-          <div class="badge">Polska • GitHub Pages + JSON</div>
-          <h1>Ceny paliw, kalkulator spalania i porównanie pojazdów</h1>
-          <p class="muted">
-            Strona wczytuje aktualne ceny z pliku JSON generowanego codziennie przez GitHub Actions.
-          </p>
-          <div id="errorBox"></div>
-          <div id="priceCards" class="prices-grid"></div>
-        </section>
+        <section class="card hero-card">
+  <div class="badge">Polska • aktualne ceny paliw • kalkulator kosztów</div>
+
+  <div class="top-spread">
+    <div>
+      <h1 class="hero-title">Ceny paliw, koszt przejazdu i porównanie pojazdów</h1>
+      <p class="hero-subtitle">
+        Sprawdź aktualne ceny Pb95, Pb98, ON, LPG i prądu. Policz koszt trasy dla auta
+        spalinowego albo elektrycznego i porównaj wyniki między różnymi pojazdami.
+      </p>
+    </div>
+    <div class="status-badge">● Dane odświeżane z JSON</div>
+  </div>
+
+  <div class="hero-actions">
+    <button class="btn-primary" id="heroAddIceBtn" type="button">Dodaj auto spalinowe</button>
+    <button class="btn-secondary" id="heroAddEvBtn" type="button">Dodaj auto elektryczne</button>
+  </div>
+
+  <div id="errorBox" style="margin-top:18px;"></div>
+  <div id="priceCards" class="prices-grid"></div>
+</section>
 
         <aside class="card stack">
-          <div>
-            <strong>Źródło danych</strong>
-            <div class="muted" id="sourceName">Ładowanie...</div>
-            <div class="muted" id="updatedAt">Ładowanie...</div>
-          </div>
-          <div>
-            <strong>Uwaga</strong>
-            <div class="muted">
-              Cena prądu jest przechowywana w JSON i może być edytowana ręcznie.
-            </div>
-          </div>
-        </aside>
+  <div>
+    <h2 class="section-title">Źródło i aktualizacja</h2>
+    <p class="section-subtitle">
+      Strona korzysta z danych zapisanych w pliku JSON aktualizowanym automatycznie przez GitHub Actions.
+    </p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Źródło danych</div>
+    <div class="panel-row" id="sourceName">Ładowanie...</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Ostatnia aktualizacja</div>
+    <div class="panel-row" id="updatedAt">Ładowanie...</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Uwaga</div>
+    <div class="panel-row">
+      Cena prądu jest przechowywana w JSON i może być edytowana ręcznie lub rozszerzona o osobne źródło.
+    </div>
+  </div>
+</aside>
       </div>
 
       <div class="grid main-grid" style="margin-top: 20px;">
         <aside class="card">
-          <h2>Aktualne ceny</h2>
-          <div id="priceEditor" class="stack"></div>
+          <h2 class="section-title">Aktualne ceny</h2>
+<p class="section-subtitle">Możesz zmieniać stawki ręcznie, żeby symulować lokalne ceny paliwa lub prądu.</p>
         </aside>
 
         <main class="stack">
           <section class="card">
             <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
-              <h2 style="margin:0;">Pojazdy do porównania</h2>
+              <div>
+  <h2 class="section-title" style="margin:0;">Pojazdy do porównania</h2>
+  <p class="section-subtitle">Dodawaj auta spalinowe i elektryczne, a ranking zaktualizuje się automatycznie.</p>
+</div>
               <div class="actions">
                 <button class="btn-primary" id="addIceBtn" type="button">Dodaj auto</button>
                 <button id="addEvBtn" type="button">Dodaj EV</button>
@@ -420,7 +448,8 @@
           </section>
 
           <section class="card">
-            <h2>Ranking kosztów</h2>
+            <h2 class="section-title">Ranking kosztów</h2>
+<p class="section-subtitle">Porównanie całkowitego kosztu przejazdu dla wszystkich dodanych pojazdów.</p>
             <div id="ranking" class="stack"></div>
           </section>
         </main>
@@ -524,12 +553,15 @@
         container.innerHTML = Object.keys(fuelMeta).map((key) => {
           const meta = fuelMeta[key];
           return `
-            <div class="price-box">
-              <div class="muted">${meta.label}</div>
-              <div class="price-value">${formatNumber(state.prices[key])}</div>
-              <div class="muted">${meta.unit}</div>
-            </div>
-          `;
+  <div class="price-box">
+    <div class="price-label">
+      <span>${meta.label}</span>
+      <span>●</span>
+    </div>
+    <div class="price-value">${formatNumber(state.prices[key])}</div>
+    <div class="muted">${meta.unit}</div>
+  </div>
+`;
         }).join("");
       }
 
@@ -619,12 +651,12 @@
           return `
             <div class="vehicle-card">
               <div style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between;">
-                <div style="flex:1;">
-                  <label class="muted">Nazwa pojazdu</label>
-                  <input class="field" data-id="${vehicle.id}" data-key="name" value="${escapeHtml(vehicle.name)}" />
-                </div>
-                <button data-remove="${vehicle.id}" type="button" style="width:auto;">Usuń</button>
-              </div>
+  <div style="flex:1;">
+    <label class="label">Nazwa pojazdu</label>
+    <input class="field" data-id="${vehicle.id}" data-key="name" value="${escapeHtml(vehicle.name)}" />
+  </div>
+  <button data-remove="${vehicle.id}" type="button" style="width:auto;">Usuń</button>
+</div>
 
               <div class="two-col" style="margin-top:14px;">
                 <button data-set-type="ice" data-id="${vehicle.id}" type="button" ${vehicle.type === "ice" ? 'style="background:#dbeafe;"' : ""}>Spalinowe</button>
@@ -704,7 +736,11 @@
 
         const cheapestCost = ranking.length ? ranking[0].metrics.totalCost : 0;
 
-        document.getElementById("ranking").innerHTML = ranking.map((entry, index) => {
+        if (!ranking.length) {
+  document.getElementById("ranking").innerHTML =
+    '<div class="empty-box">Dodaj pierwszy pojazd, aby zobaczyć ranking kosztów.</div>';
+  return;
+}
           const vehicle = entry.vehicle;
           const metrics = entry.metrics;
           const diff = metrics.totalCost - cheapestCost;
@@ -721,9 +757,9 @@
                   </div>
                 </div>
                 <div style="text-align:right;">
-                  <div style="font-size:24px;font-weight:700;">${formatCurrency(metrics.totalCost)}</div>
-                  <div class="muted">${index === 0 ? "Najniższy koszt" : "+" + formatCurrency(diff) + " względem lidera"}</div>
-                </div>
+  <div class="rank-price">${formatCurrency(metrics.totalCost)}</div>
+  <div class="muted">${index === 0 ? "Najniższy koszt" : "+" + formatCurrency(diff) + " względem lidera"}</div>
+</div>
               </div>
             </div>
           `;
@@ -771,6 +807,8 @@
 
       document.getElementById("addIceBtn").addEventListener("click", () => addVehicle("ice"));
       document.getElementById("addEvBtn").addEventListener("click", () => addVehicle("ev"));
+      document.getElementById("heroAddIceBtn").addEventListener("click", () => addVehicle("ice"));
+      document.getElementById("heroAddEvBtn").addEventListener("click", () => addVehicle("ev"));
 
       renderAll();
       loadFuelPrices();
