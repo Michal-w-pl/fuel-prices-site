@@ -5,161 +5,373 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Kalkulator paliwa i porównanie pojazdów</title>
     <style>
-      :root {
-        --bg: #f8fafc;
-        --card: #ffffff;
-        --text: #0f172a;
-        --muted: #64748b;
-        --border: #e2e8f0;
-        --primary: #0f172a;
-        --success: #16a34a;
-        --danger: #b91c1c;
-      }
+  :root {
+    --bg: #f8fafc;
+    --card: rgba(255, 255, 255, 0.9);
+    --card-strong: #ffffff;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --primary: #0f172a;
+    --primary-soft: #e2e8f0;
+    --success: #16a34a;
+    --success-soft: #dcfce7;
+    --accent: #2563eb;
+    --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    --shadow-soft: 0 6px 18px rgba(15, 23, 42, 0.06);
+  }
 
-      * { box-sizing: border-box; }
+  * { box-sizing: border-box; }
 
-      body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: var(--bg);
-        color: var(--text);
-      }
+  html {
+    scroll-behavior: smooth;
+  }
 
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 24px;
-      }
+  body {
+    margin: 0;
+    font-family: Inter, Arial, sans-serif;
+    background:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 28%),
+      radial-gradient(circle at top right, rgba(22, 163, 74, 0.08), transparent 24%),
+      var(--bg);
+    color: var(--text);
+  }
 
-      .grid {
-        display: grid;
-        gap: 20px;
-      }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+  }
 
-      .top-grid {
-        grid-template-columns: 1.4fr 0.8fr;
-      }
+  .grid {
+    display: grid;
+    gap: 20px;
+  }
 
-      .main-grid {
-        grid-template-columns: 320px 1fr;
-      }
+  .top-grid {
+    grid-template-columns: 1.4fr 0.8fr;
+    align-items: stretch;
+  }
 
-      .card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 20px;
-      }
+  .main-grid {
+    grid-template-columns: 320px 1fr;
+    align-items: start;
+  }
 
-      .prices-grid {
-        display: grid;
-        gap: 12px;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      }
+  .card {
+    background: var(--card);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 24px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
 
-      .price-box, .metric-box, .rank-item, .vehicle-card {
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 14px;
-        background: #fff;
-      }
+  .hero-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(241,245,249,0.95));
+    overflow: hidden;
+    position: relative;
+  }
 
-      .vehicle-grid {
-        display: grid;
-        gap: 16px;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      }
+  .hero-card::after {
+    content: "";
+    position: absolute;
+    right: -80px;
+    top: -80px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(37,99,235,0.14), transparent 70%);
+    pointer-events: none;
+  }
 
-      .muted {
-        color: var(--muted);
-      }
+  .hero-title {
+    font-size: clamp(32px, 4vw, 48px);
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0;
+    max-width: 900px;
+  }
 
-      .price-value, .metric-value {
-        font-size: 28px;
-        font-weight: 700;
-        margin-top: 6px;
-      }
+  .hero-subtitle {
+    margin-top: 14px;
+    max-width: 720px;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.7;
+  }
 
-      .field, .select, button {
-        width: 100%;
-        padding: 10px 12px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        font-size: 14px;
-      }
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+  }
 
-      button {
-        cursor: pointer;
-        background: white;
-      }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #eaf2ff;
+    color: #1d4ed8;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    border: 1px solid #dbeafe;
+  }
 
-      .btn-primary {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-      }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--success-soft);
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+  }
 
-      .actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
+  .prices-grid,
+  .vehicle-grid {
+    display: grid;
+    gap: 14px;
+  }
 
-      .actions button {
-        width: auto;
-      }
+  .prices-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    margin-top: 24px;
+  }
 
-      .stack {
-        display: grid;
-        gap: 14px;
-      }
+  .vehicle-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
 
-      .two-col {
-        display: grid;
-        gap: 12px;
-        grid-template-columns: 1fr 1fr;
-      }
+  .price-box,
+  .metric-box,
+  .rank-item,
+  .vehicle-card {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 16px;
+    background: var(--card-strong);
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
 
-      .result-box {
-        margin-top: 14px;
-        padding: 16px;
-        border-radius: 16px;
-        background: var(--primary);
-        color: white;
-      }
+  .price-box:hover,
+  .vehicle-card:hover,
+  .rank-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
+  }
 
-      .badge {
-        display: inline-block;
-        padding: 6px 12px;
-        border-radius: 999px;
-        background: #e2e8f0;
-        font-size: 13px;
-        margin-bottom: 12px;
-      }
+  .price-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 14px;
+  }
 
-      .winner {
-        display: inline-block;
-        background: var(--success);
-        color: white;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-size: 12px;
-      }
+  .price-value,
+  .metric-value {
+    font-size: 30px;
+    font-weight: 800;
+    margin-top: 8px;
+    letter-spacing: -0.02em;
+  }
 
-      .error-box {
-        border: 1px solid #fecaca;
-        background: #fef2f2;
-        color: var(--danger);
-        padding: 12px;
-        border-radius: 12px;
-      }
+  .section-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
 
-      @media (max-width: 900px) {
-        .top-grid, .main-grid, .two-col {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
+  .section-subtitle {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .muted {
+    color: var(--muted);
+  }
+
+  .label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .field,
+  .select,
+  button {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+    background: white;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  }
+
+  .field:focus,
+  .select:focus {
+    outline: none;
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.12);
+  }
+
+  button {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  button:hover {
+    transform: translateY(-1px);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
+    border-color: #0f172a;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .actions button {
+    width: auto;
+  }
+
+  .stack {
+    display: grid;
+    gap: 14px;
+  }
+
+  .two-col {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .panel {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 16px;
+    background: linear-gradient(180deg, #ffffff, #f8fafc);
+  }
+
+  .panel-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .panel-row {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .result-box {
+    margin-top: 16px;
+    padding: 18px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+  }
+
+  .winner {
+    display: inline-flex;
+    align-items: center;
+    background: var(--success);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .rank-item {
+    display: block;
+  }
+
+  .rank-price {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .error-box {
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #b91c1c;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .empty-box {
+    border: 1px dashed var(--border);
+    background: #fff;
+    color: var(--muted);
+    padding: 18px;
+    border-radius: 18px;
+    text-align: center;
+  }
+
+  .top-spread {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 900px) {
+    .top-grid,
+    .main-grid,
+    .two-col {
+      grid-template-columns: 1fr;
+    }
+
+    .container {
+      padding: 16px;
+    }
+
+    .card {
+      padding: 18px;
+      border-radius: 20px;
+    }
+
+    .actions button {
+      width: 100%;
+    }
+
+    .hero-actions {
+      flex-direction: column;
+    }
+  }
+</style>
   </head>
   <body>
     <div class="container">
