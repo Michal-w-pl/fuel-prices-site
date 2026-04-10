@@ -62,4 +62,35 @@ class FuelScraperTests(unittest.TestCase):
     def test_parse_from_table(self):
         result = scrape_prices(HTML_TABLE_SAMPLE)
         self.assertEqual(result.pb95, 6.19)
+        self.assertEqual(result.pb98, 6.79)
+        self.assertEqual(result.on, 7.79)
+        self.assertEqual(result.lpg, 3.84)
+
+    def test_build_payload(self):
+        payload = build_payload(
+            FuelPrices(pb95=6.19, pb98=6.79, on=7.79, lpg=3.84, electricity=1.04)
+        )
+        self.assertIn("updated_at", payload)
+        self.assertEqual(payload["prices"]["pb95"], 6.19)
+        self.assertEqual(payload["prices"]["electricity"], 1.04)
+
+    def test_save_payload(self):
+        payload = build_payload(
+            FuelPrices(pb95=6.19, pb98=6.79, on=7.79, lpg=3.84, electricity=1.04)
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / "fuel_prices.json"
+            with patch("scripts.scrape_fuel_prices.OUTPUT_PATH", output_path):
+                save_payload(payload)
+                saved = json.loads(output_path.read_text(encoding="utf-8"))
+                self.assertEqual(saved["prices"]["lpg"], 3.84)
+
+    def test_read_existing_electricity_price_default(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / "fuel_prices.json"
+            with patch("scripts.scrape_fuel_prices.OUTPUT_PATH", output_path):
+                self.assertEqual(read_existing_electricity_price(), 1.04)
+
+
+if __name__ == "__main__":
     unittest.main()
