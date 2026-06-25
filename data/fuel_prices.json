@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-06-24T08:33:16+00:00",
+  "updated_at": "2026-06-25T08:31:00+00:00",
   "source": {
     "name": "e-petrol",
     "url": "https://www.e-petrol.pl/notowania/rynek-krajowy/ceny-stacje-paliw"
   },
   "prices": {
-    "pb95": 5.98,
-    "pb98": 6.69,
+    "pb95": 5.97,
+    "pb98": 6.68,
     "on": 6.11,
     "lpg": 3.38,
     "electricity": 1.04
