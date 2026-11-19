@@ -6,7 +6,9 @@ from unittest.mock import patch
 
 from scripts.scrape_fuel_prices import (
     FuelPrices,
+    ScrapeError,
     build_payload,
+    parse_autocentrum,
     parse_decimal,
     parse_latest_prices_from_text,
     read_existing_electricity_price,
@@ -47,7 +49,36 @@ HTML_TABLE_SAMPLE = """
 """
 
 
+# Fragment strony autocentrum.pl/paliwa/ceny-paliw (układ z 19.11.2026)
+AUTOCENTRUM_SAMPLE = """
+<script type="application/ld+json">{"@type":"CollectionPage","mainEntity":{"@type":"ItemList",
+"itemListElement":[
+{"@type":"ListItem","position":1,"item":{"@type":"Thing","name":"95","description":"Średnia cena 95 w Polsce: 5.93 zł/l"}},
+{"@type":"ListItem","position":2,"item":{"@type":"Thing","name":"98","description":"Średnia cena 98 w Polsce: 6.48 zł/l"}},
+{"@type":"ListItem","position":3,"item":{"@type":"Thing","name":"ON","description":"Średnia cena ON w Polsce: 7.46 zł/l"}},
+{"@type":"ListItem","position":4,"item":{"@type":"Thing","name":"ON premium","description":"Średnia cena ON premium w Polsce: 7.54 zł/l"}},
+{"@type":"ListItem","position":5,"item":{"@type":"Thing","name":"LPG","description":"Średnia cena LPG w Polsce: 3.91 zł/l"}}]}}</script>
+<script type="application/ld+json">to nie jest json</script>
+"""
+
+
 class FuelScraperTests(unittest.TestCase):
+    def test_parse_autocentrum(self):
+        result = parse_autocentrum(AUTOCENTRUM_SAMPLE)
+        self.assertEqual((result.pb95, result.pb98, result.on, result.lpg), (5.93, 6.48, 7.46, 3.91))
+
+    def test_parse_autocentrum_changed_layout(self):
+        with self.assertRaises(ScrapeError):
+            parse_autocentrum("<html><body>Ceny paliw</body></html>")
+
+    def test_build_payload_source(self):
+        payload = build_payload(
+            FuelPrices(pb95=5.93, pb98=6.48, on=7.46, lpg=3.91, electricity=1.04),
+            "autocentrum.pl",
+            "https://www.autocentrum.pl/paliwa/ceny-paliw/",
+        )
+        self.assertEqual(payload["source"]["name"], "autocentrum.pl")
+
     def test_parse_decimal(self):
         self.assertEqual(parse_decimal("6,79"), 6.79)
         self.assertEqual(parse_decimal(" 3,84 zł "), 3.84)

@@ -857,6 +857,15 @@
           state.updatedAt = data.updated_at || null;
 
           renderAll();
+
+          const ageDays = state.updatedAt ? (Date.now() - new Date(state.updatedAt).getTime()) / 864e5 : Infinity;
+          if (ageDays > 3) {
+            showError(
+              "Ceny mogą być nieaktualne — ostatnia aktualizacja: " +
+                (state.updatedAt ? new Date(state.updatedAt).toLocaleDateString("pl-PL") : "nieznana") +
+                ". Możesz wpisać własne ceny poniżej."
+            );
+          }
         } catch (error) {
           console.error(error);
           showError(error.message || "Nie udało się wczytać danych.");

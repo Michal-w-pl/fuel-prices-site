@@ -11,6 +11,9 @@ import requests
 from bs4 import BeautifulSoup
 
 SOURCE_URL = "https://www.e-petrol.pl/notowania/rynek-krajowy/ceny-stacje-paliw"
+# Źródło główne: e-petrol od lipca 2026 blokuje serwery GitHub Actions (403).
+AUTOCENTRUM_URL = "https://www.autocentrum.pl/paliwa/ceny-paliw/"
+AUTOCENTRUM_NAMES = {"95": "pb95", "98": "pb98", "ON": "on", "LPG": "lpg"}
 OUTPUT_PATH = Path(__file__).resolve().parents[1] / "data" / "fuel_prices.json"
 TIMEOUT_SECONDS = 30
 USER_AGENT = (
@@ -136,6 +139,43 @@ def parse_latest_prices_from_table(html: str) -> FuelPrices:
     )
 
 
+def parse_autocentrum(html: str) -> FuelPrices:
+    """Średnie ceny w Polsce z danych strukturalnych (JSON-LD) strony autocentrum.pl."""
+    soup = BeautifulSoup(html, "html.parser")
+    values: dict[str, float] = {}
+    for tag in soup.find_all("script", type="application/ld+json"):
+        try:
+            data = json.loads(tag.string or "")
+        except ValueError:
+            continue
+        candidates = [data]
+        if isinstance(data, dict) and isinstance(data.get("mainEntity"), dict):
+            candidates.append(data["mainEntity"])
+        for lst in candidates:
+            if not isinstance(lst, dict) or lst.get("@type") != "ItemList":
+                continue
+            for el in lst.get("itemListElement", []):
+                item = el.get("item", {}) if isinstance(el, dict) else {}
+                key = AUTOCENTRUM_NAMES.get(str(item.get("name", "")).strip())
+                match = re.search(r"([0-9]+[.,][0-9]+)\s*zł", str(item.get("description", "")))
+                if key and match:
+                    value = parse_decimal(match.group(1))
+                    if 2.0 < value < 12.0:
+                        values.setdefault(key, value)
+
+    missing = [k for k in ("pb95", "pb98", "on", "lpg") if k not in values]
+    if missing:
+        raise ScrapeError(f"autocentrum.pl: brak cen dla {', '.join(missing)}")
+
+    return FuelPrices(
+        pb95=values["pb95"],
+        pb98=values["pb98"],
+        on=values["on"],
+        lpg=values["lpg"],
+        electricity=read_existing_electricity_price(),
+    )
+
+
 def read_existing_electricity_price(default: float = 1.04) -> float:
     if not OUTPUT_PATH.exists():
         return default
@@ -153,13 +193,13 @@ def scrape_prices(html: str) -> FuelPrices:
         return parse_latest_prices_from_text(html)
 
 
-def build_payload(prices: FuelPrices) -> dict:
+def build_payload(prices: FuelPrices, source_name: str = "e-petrol", source_url: str = SOURCE_URL) -> dict:
     now = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
     return {
         "updated_at": now,
         "source": {
-            "name": "e-petrol",
-            "url": SOURCE_URL,
+            "name": source_name,
+            "url": source_url,
         },
         "prices": {
             "pb95": prices.pb95,
@@ -187,9 +227,15 @@ def save_payload(payload: dict) -> None:
 
 
 def main() -> None:
-    html = fetch_html(SOURCE_URL)
-    prices = scrape_prices(html)
-    payload = build_payload(prices)
+    # Gdy oba źródła zawiodą, wyjątek kończy zadanie błędem i plik zostaje bez zmian
+    # (z prawdziwą, starszą datą) — nie zapisujemy starych cen jako nowych.
+    try:
+        prices = parse_autocentrum(fetch_html(AUTOCENTRUM_URL))
+        payload = build_payload(prices, "autocentrum.pl", AUTOCENTRUM_URL)
+    except Exception as error:  # noqa: BLE001
+        print(f"autocentrum.pl niedostępne ({error}), próbuję e-petrol.pl")
+        prices = scrape_prices(fetch_html(SOURCE_URL))
+        payload = build_payload(prices)
     save_payload(payload)
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 
