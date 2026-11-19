@@ -1,14 +1,14 @@
 {
-  "updated_at": "2026-07-22T07:42:16+00:00",
+  "updated_at": "2026-11-19T12:06:20+00:00",
   "source": {
-    "name": "e-petrol",
-    "url": "https://www.e-petrol.pl/notowania/rynek-krajowy/ceny-stacje-paliw"
+    "name": "autocentrum.pl",
+    "url": "https://www.autocentrum.pl/paliwa/ceny-paliw/"
   },
   "prices": {
-    "pb95": 7.09,
-    "pb98": 7.99,
-    "on": 7.51,
-    "lpg": 3.16,
+    "pb95": 5.93,
+    "pb98": 6.48,
+    "on": 7.46,
+    "lpg": 3.91,
     "electricity": 1.04
   },
   "meta": {
