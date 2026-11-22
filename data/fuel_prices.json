@@ -1,14 +1,14 @@
 {
-  "updated_at": "2026-11-21T13:29:22+00:00",
+  "updated_at": "2026-11-22T13:23:25+00:00",
   "source": {
     "name": "autocentrum.pl",
     "url": "https://www.autocentrum.pl/paliwa/ceny-paliw/"
   },
   "prices": {
-    "pb95": 5.9,
-    "pb98": 6.42,
-    "on": 7.42,
-    "lpg": 3.91,
+    "pb95": 5.86,
+    "pb98": 6.37,
+    "on": 7.34,
+    "lpg": 3.92,
     "electricity": 1.04
   },
   "meta": {
